@@ -17,4 +17,4 @@ RUN npm prune --omit=dev && npm cache clean --force
 
 ENV NODE_ENV=production
 
-CMD ["npm", "run", "start"]
+CMD ["sh", "-c", "HOST=0.0.0.0 npm run start"]

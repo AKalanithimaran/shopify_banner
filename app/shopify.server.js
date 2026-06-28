@@ -10,8 +10,8 @@ import prisma from "./db.server";
 function resolveAppUrl() {
   const configuredUrl =
     process.env.SHOPIFY_APP_URL ||
-    process.env.HOST ||
     process.env.RENDER_EXTERNAL_URL ||
+    process.env.HOST ||
     "";
 
   if (!configuredUrl) {
@@ -22,7 +22,7 @@ function resolveAppUrl() {
     ? configuredUrl
     : `https://${configuredUrl}`;
 
-  if (process.env.NODE_ENV === "production" && /localhost|127\.0\.0\.1/.test(appUrl)) {
+  if (process.env.NODE_ENV === "production" && /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(appUrl)) {
     const renderUrl = process.env.RENDER_EXTERNAL_URL;
 
     if (renderUrl) {
