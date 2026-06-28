@@ -1,0 +1,221 @@
+{% assign announcement_text = shop.metafields.my_app.announcement.value | default: shop.metafields.my_app.announcement %}
+
+{% if announcement_text != blank %}
+  <div
+    id="ab-app-embed-{{ block.id }}"
+    class="ab-app-embed ab-app-embed--{{ block.settings.position }}"
+    style="--ab-background: {{ block.settings.background_color }}; --ab-text: {{ block.settings.text_color }};"
+    role="status"
+  >
+    <div class="ab-app-embed__inner">
+      {{ announcement_text | escape }}
+    </div>
+  </div>
+
+  <style>
+    .ab-app-embed {
+      left: 0;
+      right: 0;
+      background: var(--ab-background);
+      color: var(--ab-text);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    }
+
+    .ab-app-embed--top {
+      position: fixed;
+      top: 0;
+      z-index: 2147483000;
+      width: 100%;
+    }
+
+    .ab-app-embed--bottom {
+      position: fixed;
+      z-index: 2147483000;
+      bottom: 0;
+    }
+
+    .ab-app-embed__inner {
+      width: min(100% - 32px, 1120px);
+      box-sizing: border-box;
+      margin: 0 auto;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+  </style>
+
+  {% if block.settings.position == 'top' %}
+    <script>
+      (() => {
+        const bannerId = "ab-app-embed-{{ block.id }}";
+        const adjustedHeaderAttribute = "data-ab-sticky-header-adjusted";
+        const headerSelectors = [
+          "#shopify-section-header",
+          ".shopify-section-header",
+          '[id*="shopify-section-header"]',
+          "header",
+          ".header-wrapper",
+          ".site-header",
+          '[class*="header"]',
+        ];
+        let originalBodyPaddingTop;
+        let animationFrameId;
+
+        const getBannerHeight = () => {
+          const banner = document.getElementById(bannerId);
+          return banner ? banner.offsetHeight : 0;
+        };
+
+        const getHeaderCandidates = () => {
+          const candidates = new Set();
+
+          headerSelectors.forEach((selector) => {
+            document.querySelectorAll(selector).forEach((element) => {
+              if (element instanceof HTMLElement && element.id !== bannerId) {
+                candidates.add(element);
+              }
+            });
+          });
+
+          return [...candidates];
+        };
+
+        const resetHeader = (header) => {
+          if (header.getAttribute(adjustedHeaderAttribute) !== "true") {
+            return;
+          }
+
+          if (header.dataset.abOriginalTop === "") {
+            header.style.removeProperty("top");
+          } else {
+            header.style.top = header.dataset.abOriginalTop;
+          }
+
+          if (header.dataset.abOriginalZIndex === "") {
+            header.style.removeProperty("z-index");
+          } else {
+            header.style.zIndex = header.dataset.abOriginalZIndex;
+          }
+
+          delete header.dataset.abOriginalTop;
+          delete header.dataset.abOriginalZIndex;
+          header.removeAttribute(adjustedHeaderAttribute);
+        };
+
+        const updateStickyHeaders = (bannerHeight) => {
+          getHeaderCandidates().forEach((header) => {
+            const style = window.getComputedStyle(header);
+            const position = style.position;
+            const top = Number.parseFloat(style.top) || 0;
+            const isStickyHeader = (position === "fixed" || position === "sticky") && top <= bannerHeight;
+
+            if (!isStickyHeader || bannerHeight <= 0) {
+              resetHeader(header);
+              return;
+            }
+
+            if (header.getAttribute(adjustedHeaderAttribute) !== "true") {
+              header.dataset.abOriginalTop = header.style.top;
+              header.dataset.abOriginalZIndex = header.style.zIndex;
+            }
+
+            header.style.top = `${bannerHeight}px`;
+            header.style.zIndex = "2147482999";
+            header.setAttribute(adjustedHeaderAttribute, "true");
+          });
+        };
+
+        const updatePageOffset = () => {
+          const bannerHeight = getBannerHeight();
+
+          if (bannerHeight > 0) {
+            /*
+              The top banner is fixed so it remains visible while scrolling.
+              Padding is calculated from the rendered height so longer text or
+              merchant style changes do not cover the header/navigation. Sticky
+              theme headers are also offset during scroll because many themes
+              switch their header back to fixed/sticky after initial page load.
+            */
+            document.documentElement.style.setProperty("--announcement-banner-height", `${bannerHeight}px`);
+
+            if (originalBodyPaddingTop === undefined) {
+              originalBodyPaddingTop = window.getComputedStyle(document.body).paddingTop;
+            }
+
+            document.body.style.paddingTop = `calc(${originalBodyPaddingTop} + ${bannerHeight}px)`;
+          }
+
+          updateStickyHeaders(bannerHeight);
+        };
+
+        const scheduleUpdate = () => {
+          if (animationFrameId) {
+            return;
+          }
+
+          animationFrameId = window.requestAnimationFrame(() => {
+            animationFrameId = undefined;
+            updatePageOffset();
+          });
+        };
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", scheduleUpdate, { once: true });
+        } else {
+          scheduleUpdate();
+        }
+
+        window.addEventListener("load", scheduleUpdate);
+        window.addEventListener("resize", scheduleUpdate);
+        window.addEventListener("scroll", scheduleUpdate, { passive: true });
+
+        new MutationObserver(scheduleUpdate).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["class", "style"],
+          childList: true,
+          subtree: true,
+        });
+      })();
+    </script>
+  {% endif %}
+{% endif %}
+
+{% schema %}
+{
+  "name": "Announcement Banner",
+  "target": "body",
+  "settings": [
+    {
+      "type": "select",
+      "id": "position",
+      "label": "Position",
+      "default": "top",
+      "options": [
+        {
+          "value": "top",
+          "label": "Top"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#111827"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    }
+  ]
+}
+{% endschema %}
