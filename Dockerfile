@@ -5,14 +5,16 @@ EXPOSE 3000
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-
 COPY package.json package-lock.json* ./
 
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci
 
 COPY . .
 
+RUN npm run setup
 RUN npm run build
+RUN npm prune --omit=dev && npm cache clean --force
 
-CMD ["npm", "run", "docker-start"]
+ENV NODE_ENV=production
+
+CMD ["npm", "run", "start"]
