@@ -168,7 +168,7 @@ This app can be deployed on Render as a Web Service.
 ## Live Demo
 
 - Deployed App URL: https://shopify-banner-x0pk.onrender.com
-- Demo Video: [INSERT LOOM/YOUTUBE LINK HERE]
+- Demo Video: https://drive.google.com/file/d/1WUQz9Hr5qOSTnJJrJRaMxAapoWHH2EwH/view?usp=drive_link
 
 ## Folder Structure
 
