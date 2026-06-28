@@ -7,6 +7,44 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 
+function resolveAppUrl() {
+  const configuredUrl =
+    process.env.SHOPIFY_APP_URL ||
+    process.env.HOST ||
+    process.env.RENDER_EXTERNAL_URL ||
+    "";
+
+  if (!configuredUrl) {
+    return "";
+  }
+
+  const appUrl = configuredUrl.startsWith("http")
+    ? configuredUrl
+    : `https://${configuredUrl}`;
+
+  if (process.env.NODE_ENV === "production" && /localhost|127\.0\.0\.1/.test(appUrl)) {
+    const renderUrl = process.env.RENDER_EXTERNAL_URL;
+
+    if (renderUrl) {
+      return renderUrl.startsWith("http") ? renderUrl : `https://${renderUrl}`;
+    }
+
+    throw new Error(
+      "Production app URL cannot be localhost. Set SHOPIFY_APP_URL and HOST to your Render service URL.",
+    );
+  }
+
+  return appUrl;
+}
+
+function resolveCustomShopDomain() {
+  if (!process.env.SHOP_CUSTOM_DOMAIN) {
+    return undefined;
+  }
+
+  return process.env.SHOP_CUSTOM_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
 if (!process.env.SHOPIFY_API_KEY) {
   console.warn("SHOPIFY_API_KEY is missing. Copy the Client ID from your app's Dev Dashboard settings.");
 }
@@ -17,6 +55,9 @@ if (!process.env.SHOPIFY_API_SECRET) {
   );
 }
 
+const appUrl = resolveAppUrl();
+const customShopDomain = resolveCustomShopDomain();
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
@@ -25,16 +66,14 @@ const shopify = shopifyApp({
     .split(",")
     .map((scope) => scope.trim())
     .filter(Boolean),
-  appUrl: process.env.SHOPIFY_APP_URL || process.env.HOST || "",
+  appUrl,
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   future: {
     expiringOfflineAccessTokens: true,
   },
-  ...(process.env.SHOP_CUSTOM_DOMAIN
-    ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
-    : {}),
+  ...(customShopDomain ? { customShopDomains: [customShopDomain] } : {}),
 });
 
 export default shopify;
