@@ -144,8 +144,8 @@ This app can be deployed on Render as a Web Service.
    SHOPIFY_API_KEY=your_api_key
    SHOPIFY_API_SECRET=your_api_secret
    SCOPES=read_content,write_content
-   HOST=https://your-render-app.onrender.com
-   SHOPIFY_APP_URL=https://your-render-app.onrender.com
+   HOST=https://shopify-banner-x0pk.onrender.com
+   SHOPIFY_APP_URL=https://shopify-banner-x0pk.onrender.com
    MONGO_URI=your_mongodb_connection_string
    MONGO_DNS_SERVERS=8.8.8.8,1.1.1.1
    ```
@@ -167,7 +167,7 @@ This app can be deployed on Render as a Web Service.
 
 ## Live Demo
 
-- Deployed App URL: [INSERT RENDER URL HERE]
+- Deployed App URL: https://shopify-banner-x0pk.onrender.com
 - Demo Video: [INSERT LOOM/YOUTUBE LINK HERE]
 
 ## Folder Structure
